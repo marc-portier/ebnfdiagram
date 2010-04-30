@@ -1,0 +1,84 @@
+EBNF-Diagram
+------------
+jQuery plugin that plots syntax diagrams (aka railroad diagrams) out of a formal syntax description.
+
+
+Getting it
+----------
+You can checkout the source code at git://dev.outerthought.org/outerthought/ebnfdiagram.git
+
+  $ git pull git://dev.outerthought.org/outerthought/ebnfdiagram.git
+
+
+Building
+--------
+There is no real automated build in place, sorry for that. What you need to do is:
+
+0. Get a js interpreter you can operate from the command line.
+
+   We recommend rhino, the more interesting platforms have it on board or at least in the package repositories.
+
+1. Build the parser
+
+   mkdir -p target/js;
+   cd tools/jscc; 
+   rhino jscc.js -o ../../target/js/ebnf.js ../../src/main/syntax/ebnf.par; 
+   cd -;
+
+
+2. Embed the parser in the templates
+
+   This is really manual stuff for now:
+   * open the files in src/templates/*
+   * replace the @@@EbnfParser@@@ token with the contents of target/js/ebnfdia.js
+   * save the result in target/js/*
+
+3. Make it available for the test
+
+   Either copy after every rebuild
+     cp target/js/ebnf-jq.js test/webenv/js/
+     
+   Or link once
+     ln -s target/js/ebnf-jq.js test/webenv/js/
+
+
+There is a limited automation of these build-steps captured in some bash files, they are provided as is:
+  ./build.sh
+  ./test.sh
+
+
+Testing
+-------
+Just point your browser to test/webenv/index.html.
+
+Add some syntax in the textarea and push the buttons.
+
+
+
+Documentation
+-------------
+The code itself is currently your best source of documentation. 
+Given the total size of the project source it might be hard to make a more condense variant :)
+
+The default browser-testpage (see above) shows the diagram of the syntax the rendition expects as input.
+
+Nevertheless, some extra simple usage documents might be wise about:
+ * howto csutomize the vizuals
+ * howto integrate its use on your own pages
+
+Also: 
+  * the src/desgin folder contains a scan of sketches that help explain how some of the internal drawing stuff is happening.
+  * js/cc and jQuery provide more docs that might come around handy. Check the file CREDITS for pointers.
+
+
+
+Future Work
+-----------
+Is coordinated through git and track. 
+See: http://dev.outerthought.org/trac/outerthought_ebnfdiagram
+
+Next to the things you already thought of yourself, here is a short list of things to be added:
+ * better build framework - and make it cross platform 
+ * better jQuery usage: 
+   * provide some automatic way to have pre/@class="ebnf" elements replaced with the diagram canvas
+ * add support for the html5 impaired (ie) through explorercanvas (http://code.google.com/p/explorercanvas/)

@@ -1,0 +1,58 @@
+<html>
+<head>
+    <style type="text/css">
+    button {
+        vertical-align: top;
+    }
+    </style>
+    <script type="text/javascript" src="./js/jquery.min.js"></script>
+    <script type="text/javascript" src="./js/ebnf-jq.js"></script>
+    <script type="text/javascript" src="./js/ebnfdia-jq.js"></script>
+    <script type="text/javascript">
+    $(document).ready(function(){
+        $("#parse").click(function(){
+            var ebnf = $("#ebnf").val();
+            $.ebnfParse(ebnf);
+        });
+        
+        var dia = $("#out").ebnfdia()[0];
+        
+        $("#dia").click(function(){
+            var ebnf = $("#ebnf").val();
+            $.ebnfParse( ebnf, 
+                function(syn){
+                    dia.setSyntax(syn);
+                }, 
+                function(err) {
+                    dia.showErrors(err);
+                }
+            );
+        });
+    });
+    </script>
+</head>
+<body>
+<textarea id="ebnf" rows="10" cols="80">
+"EBNF defined in itself" {
+	syntax     = [ title ] "{" { production } "}" [ comment ].
+	production = identifier "=" expression ( "." | ";" ) .
+	expression = term { "|" term } .
+	term       = factor { factor } .
+	factor     = identifier
+	           | literal
+	           | "[" expression "]"
+	           | "(" expression ")"
+	           | "{" expression "}" .
+	identifier = character { character } .
+	title      = literal .
+	comment    = literal .
+	literal    = "'" character { character } "'"
+	           | '"' character { character } '"' .
+} "EBNF is a cool syntax for describing syntaxes."
+</textarea>
+<button id="parse">parse it</button>
+<button id="dia">diagram it</button>
+<hr />
+<canvas id="out" height="1800" width="1800">canvas not supported in your browser!</canvas>
+</body>
+</html>
