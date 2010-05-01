@@ -30,7 +30,7 @@ There is no real automated build in place, sorry for that. What you need to do i
 
    This is really manual stuff for now:
    * open the files in src/templates/*
-   * replace the @@@EbnfParser@@@ token with the contents of target/js/ebnfdia.js
+   * replace the @@@EbnfParser@@@ token with the contents of target/js/ebnf.js
    * save the result in target/js/*
 
 3. Make it available for the test
