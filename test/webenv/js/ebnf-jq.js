@@ -1,1 +1,0 @@
-/home/mpo/Desktop/ebnfdia/target/js/ebnf-jq.js
