@@ -10,12 +10,29 @@
     <script type="text/javascript" src="../../main/js/ebnfdiagram.js"></script>
     <script type="text/javascript">
     $(document).ready(function(){
-        var styles={};
-        $("pre.ebnf").ebnfdiagram(styles);
+        $("#parse").click(function(){
+            var ebnf = $("#ebnf").val();
+            $.ebnfParse(ebnf);
+        });
+        
+        var dia = $("#out").ebnfcanvas()[0];
+        
+        $("#dia").click(function(){
+            var ebnf = $("#ebnf").val();
+            $.ebnfParse( ebnf, 
+                function(syn){
+                    dia.setSyntax(syn);
+                }, 
+                function(err) {
+                    dia.showErrors(err);
+                }
+            );
+        });
+    });
     </script>
 </head>
 <body>
-<pre class="ebnf" >
+<textarea id="ebnf" rows="10" cols="80">
 "EBNF defined in itself" {
 	syntax     = [ title ] "{" { production } "}" [ comment ].
 	production = identifier "=" expression ( "." | ";" ) .
@@ -32,8 +49,10 @@
 	literal    = "'" character { character } "'"
 	           | '"' character { character } '"' .
 } "EBNF is a cool syntax for describing syntaxes."
-</pre>
+</textarea>
+<button id="parse">parse it</button>
+<button id="dia">diagram it</button>
 <hr />
-Note. The <a href="test.html">interactive test page</a> has moved.
+<canvas id="out" height="1800" width="1800">canvas not supported in your browser!</canvas>
 </body>
 </html>

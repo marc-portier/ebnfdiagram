@@ -3,7 +3,7 @@
 
     //introduce ebnfdia() on $
     $.fn.extend({
-        "ebnfdia": function(style) {
+        "ebnfcanvas": function(style) {
             return this.map( function(){            
                 return new EbnfDiagram($(this), style);
             });

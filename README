@@ -32,7 +32,7 @@ There is a limited automation of these build-steps captured in some bash files, 
 
 Testing
 -------
-Just point your browser to test/webenv/index.html.
+Just point your browser to test/webenv/test.html.
 
 Add some syntax in the textarea and push the buttons.
 
@@ -47,7 +47,7 @@ Given the total size of the project source it might be hard to make a more conde
 The default browser-testpage (see above) shows the diagram of the syntax the rendition expects as input.
 
 Nevertheless, some extra simple usage documents might be wise about:
- * howto csutomize the vizuals
+ * howto customize the vizuals
  * howto integrate its use on your own pages
 
 Also: 
