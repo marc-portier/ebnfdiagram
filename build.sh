@@ -8,8 +8,8 @@ BASEDIR=$(pwd);
 cd - >> /dev/null;
 
 
-TGT="${BASEDIR}/target/js/ebnf.js";
-SRC="${BASEDIR}/src/main/syntax/ebnf.par";
+TGT="${BASEDIR}/target/js/ebnf-jq.js";
+SRC="${BASEDIR}/src/main/syntax/ebnf-jq.par";
 TEMPLDIR="${BASEDIR}/src/templates";
 
 #set/find/test/warn js interpreter
@@ -40,20 +40,3 @@ ${JSI} ${JSCC} -o ${TGT} ${SRC}
 cd - >> /dev/null
 echo "Parser Generated.";
 
-
-#work - fill templates
-BuildStamp="WARNING: This is a generated file. Do not change directly, but let it be generated again.\nBuild by ${USER} on host ${HOSTNAME} on date $(date)";
-EbnfParser=$(cat ${TGT});
-
-echo -n "Processing templates: "
-for f in ${TEMPLDIR}/*.js; do
-        b="$(basename $f)";
-	echo -n "${b}, ";
-	echo -n "" > ${TGTDIR}/${b};
-	cat $f | while read -r t; do 
-		t=${t//@@@BuildStamp@@@/${BuildStamp}};
-		t=${t//@@@EbnfParser@@@/${EbnfParser}};
-		echo "${t}" >> ${TGTDIR}/${b};
-	done; 
-done;
-echo "Templates processed."

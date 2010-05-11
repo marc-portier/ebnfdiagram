@@ -22,29 +22,12 @@ There is no real automated build in place, sorry for that. What you need to do i
 
    mkdir -p target/js;
    cd tools/jscc; 
-   rhino jscc.js -o ../../target/js/ebnf.js ../../src/main/syntax/ebnf.par; 
+   rhino jscc.js -o ../../target/js/ebnf-jq.js ../../src/main/syntax/ebnf-jq.par; 
    cd -;
-
-
-2. Embed the parser in the templates
-
-   This is really manual stuff for now:
-   * open the files in src/templates/*
-   * replace the @@@EbnfParser@@@ token with the contents of target/js/ebnf.js
-   * save the result in target/js/*
-
-3. Make it available for the test
-
-   Either copy after every rebuild
-     cp target/js/ebnf-jq.js test/webenv/js/
-     
-   Or link once
-     ln -s target/js/ebnf-jq.js test/webenv/js/
 
 
 There is a limited automation of these build-steps captured in some bash files, they are provided as is:
   ./build.sh
-  ./test.sh
 
 
 Testing
@@ -53,6 +36,7 @@ Just point your browser to test/webenv/index.html.
 
 Add some syntax in the textarea and push the buttons.
 
+TODO: we think about providing some qunit testing. 
 
 
 Documentation
@@ -69,7 +53,6 @@ Nevertheless, some extra simple usage documents might be wise about:
 Also: 
   * the src/desgin folder contains a scan of sketches that help explain how some of the internal drawing stuff is happening.
   * js/cc and jQuery provide more docs that might come around handy. Check the file CREDITS for pointers.
-
 
 
 Future Work
