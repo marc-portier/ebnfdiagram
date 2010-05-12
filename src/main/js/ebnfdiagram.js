@@ -38,7 +38,7 @@
         this.width  = $elm.width();
         
         this.styles = $.mergedClone(STYLES, styles);
-        this.style  = this.styles["DIA"];
+        this.style  = this.styles["DIAGRAM"];
         this.init();    
     }
 
@@ -95,7 +95,7 @@
         }, 
         "OPTIONAL":        {
         },
-        "DIA":             {
+        "DIAGRAM":         {
             "line-stroke"      : "rgba( 10, 10, 10, 1)",
             "line-weight"      : 2,
             "grid"             : 12,
