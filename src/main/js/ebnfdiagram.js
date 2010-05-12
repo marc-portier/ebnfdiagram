@@ -3,15 +3,28 @@
 
     //introduce ebnfdia() on $
     $.fn.extend({
-        "ebnfcanvas": function(style) {
+        "ebnfcanvas": function(styles) {
             return this.map( function(){            
-                return new EbnfDiagram($(this), style);
+                return new EbnfDiagram($(this), styles);
+            });
+        },
+        "ebnfdiagram": function(styles) {
+            return this.each( function(){            
+                plotDiagram($(this), styles);
             });
         }
     });
     
+    function plotDiagram($elm, styles) {
+        var h = 100;
+        var w = 100;
+        var cnv = '<canvas height="'+h+'" width="'+w+'"></canvas>';
+        var $cnv = $(cnv);
+        $cnv.insertAfter($elm);
+    }
+    
     $.extend({
-        "merge": function(base, spec) {
+        "mergedClone": function(base, spec) {
             //TODO CHANGE INTO DEEP-EXTEND!
             return $.extend( $.extend({}, base), spec);
         }
@@ -24,7 +37,7 @@
         this.height = $elm.height();
         this.width  = $elm.width();
         
-        this.styles = $.merge(STYLES, styles);
+        this.styles = $.mergedClone(STYLES, styles);
         this.style  = this.styles["DIA"];
         this.init();    
     }
