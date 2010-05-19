@@ -10,23 +10,42 @@
         },
         "ebnfdiagram": function(styles) {
             return this.each( function(){            
-                plotDiagram($(this), styles);
+                makeDiagram($(this), styles);
             });
         }
     });
     
-    function plotDiagram($elm, styles) {
-        var h = 100;
-        var w = 100;
+    function makeDiagram($elm, styles) {
+        var ebnf = $elm.text();
+        
+        //TODO perform hight/width calculations
+        var h = $elm.height();
+        var w = $elm.width();
         var cnv = '<canvas height="'+h+'" width="'+w+'"></canvas>';
         var $cnv = $(cnv);
-        $cnv.insertAfter($elm);
+        $cnv.insertAfter($elm).hide();
+        
+        var showDiagram = function() {
+            $elm.hide("normal");
+            $cnv.show("normal");
+        }
+        
+        var dia = $cnv.ebnfcanvas(styles)[0];
+        $.ebnfParse( ebnf, 
+            function(syn){
+                dia.setSyntax(syn);
+                showDiagram();
+            }, 
+            function(err) {
+                dia.showErrors(err);
+                showDiagram();
+            }
+        );
     }
     
     $.extend({
         "mergedClone": function(base, spec) {
-            //TODO CHANGE INTO DEEP-EXTEND!
-            return $.extend( $.extend({}, base), spec);
+            return $.extend(true, $.extend({}, base), spec);
         }
     });
     

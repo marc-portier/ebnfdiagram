@@ -10,29 +10,74 @@
     <script type="text/javascript" src="../../main/js/ebnfdiagram.js"></script>
     <script type="text/javascript">
     $(document).ready(function(){
-        var styles={};
+        var styles={
+            "SYNTAX":          {
+                "margin"            : 20,
+                "round"             : 20,
+                "background-fill"   : "rgba(200,100,200, 0.6)"
+            },
+            "PRODUCTION":      {
+                "margin"            : 15,
+                "round"             : 15,
+                "background-fill"   : "rgba(255,255,255, 0.9)"
+            },
+            "LITERAL":         {
+                "background-fill"   : "rgba( 20, 200, 20, 0.75)",
+                "background-stroke" : "rgba( 10, 100, 10, 0.9)"
+            },
+            "IDENTIFIER":      {
+                "background-fill"   : "rgba( 20, 20, 200, 0.5)",
+                "background-stroke" : "rgba( 10, 10, 100, 0.8)"
+            },
+            "DIAGRAM":         {
+                "line-stroke"      : "rgba( 200, 10, 10, 1)"
+            }
+        }
+
         $("pre.ebnf").ebnfdiagram(styles);
     });
     </script>
 </head>
 <body>
 <pre class="ebnf" >
+
 "EBNF defined in itself" {
+
+
 	syntax     = [ title ] "{" { production } "}" [ comment ].
+
+
 	production = identifier "=" expression ( "." | ";" ) .
+
+
 	expression = term { "|" term } .
+
+
 	term       = factor { factor } .
+
+
 	factor     = identifier
 	           | literal
 	           | "[" expression "]"
 	           | "(" expression ")"
 	           | "{" expression "}" .
+
+
 	identifier = character { character } .
+
+
 	title      = literal .
+
+
 	comment    = literal .
+
+
 	literal    = "'" character { character } "'"
 	           | '"' character { character } '"' .
+
+
 } "EBNF is a cool syntax for describing syntaxes."
+
 </pre>
 <hr />
 Note. The <a href="test.html">interactive test page</a> has moved.
