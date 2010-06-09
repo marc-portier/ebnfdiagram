@@ -12,7 +12,7 @@ You might want to check those (and their licenses out)
 		Copyright © 2007, 2008 by
 		Jan Max Meyer, J.M.K S.F. Software Technologies
 
-	* license (see )
+	* license 
 		Artistic License (http://www.opensource.org/licenses/artistic-license.php)
 		
 	* see docs at
@@ -34,3 +34,20 @@ You might want to check those (and their licenses out)
 	
 	* see docs at
 	    http://docs.jquery.com/Main_Page
+	   
+	   
+[explorercanvas]
+    * version 
+        Release 3
+        
+    * download from
+        http://code.google.com/p/explorercanvas/downloads/list
+        
+    * by
+        http://code.google.com/p/explorercanvas/people/list
+    
+    * license 
+        APL 2 Apache Public License (http://opensource.org/licenses/apache2.0.php) 
+        
+    * see docs at
+        http://code.google.com/p/explorercanvas/w/list
