@@ -25,20 +25,20 @@
         var $cnv = $(cnv);
         $cnv.insertAfter($elm).hide();
         
-        var showDiagram = function() {
+        var showDiagram = function(dia) {
             $elm.hide("normal");
-            $cnv.show("normal");
+            dia.$cnv.show("normal");
         }
         
         var dia = $cnv.ebnfcanvas(styles)[0];
         $.ebnfParse( ebnf, 
             function(syn){
                 dia.setSyntax(syn);
-                showDiagram();
+                showDiagram(dia);
             }, 
             function(err) {
                 dia.showErrors(err);
-                showDiagram();
+                showDiagram(dia);
             }
         );
     }
@@ -51,14 +51,17 @@
     
     function EbnfDiagram($elm, styles) {
         this.$cnv = $elm;
-        this.gc = $elm.get(0).getContext('2d');
 
-        this.height = $elm.height();
-        this.width  = $elm.width();
-        
         this.styles = $.mergedClone(STYLES, styles);
         this.style  = this.styles["DIAGRAM"];
         this.init();    
+    }
+
+    EbnfDiagram.prototype.getGC = function() {
+        if (! this.gc) {
+            this.gc = this.$cnv.get(0).getContext('2d');            
+        }
+        return this.gc;
     }
 
     //default style
@@ -462,8 +465,12 @@
 
     //actual diagram code
     EbnfDiagram.prototype.init = function() {
+
+        this.height = this.$cnv.height();
+        this.width  = this.$cnv.width();
+        
         // clear the canvas
-        this.gc.clearRect( 0, 0, this.width, this.height);
+        this.getGC().clearRect( 0, 0, this.width, this.height);
     }
     
     EbnfDiagram.prototype.showErrors = function(err) {
@@ -474,13 +481,14 @@
     }
     
     EbnfDiagram.prototype.setSyntax = function(syn) {
-        this.init();
         this.prepare(syn, this.styles);
         
-        var gc = this.gc;
+        this.resize({"width": syn.width, "height": syn.height}, this.styles.CANVAS);
+        this.init();
+
+        var gc = this.getGC();
         var scale = Math.min(this.width/syn.width, this.height/syn.height);
         
-        //TODO calculate scaling
         gc.save();
         try {
             gc.scale(scale,scale);
@@ -502,7 +510,7 @@
         
         node.style   = this.styles[type];
         
-        node.handler.prepare(node, this, this.gc);
+        node.handler.prepare(node, this, this.getGC());
     }
     
     // Draw visitor, draws the specified node at the specified position
@@ -511,7 +519,7 @@
         if (!node.handler) 
             throw "Request to draw a node that is not prepared yet! nodetype=" + node.nodetype;
             
-        var gc = this.gc;
+        var gc = this.getGC();
         x = x || 0;
         y = y || 0;
         
@@ -524,7 +532,39 @@
         }            
     }
     
-    
+
+    // Resizes the canvas to fit the needed space according to the rules
+    // rules for width and height can be fixed values, or '*' 
+    // * indicates that dimension can freely grow/adjust to needs.
+    EbnfDiagram.prototype.resize = function(need, rules) {
+	    if (!rules || (!rules.height && !rules.width))
+		    return; // no rules, no work
+	
+	    var dim={"height": this.height, "width": this.width};
+
+	    rules.height = rules.height || this.height; // nothing set means keep current
+	    rules.width  = rules.width  || this.width; // nothing set means keep current
+	
+	    if (rules.width == "*" && rules.height == "*")	{ //set both
+	        dim.width  = need.width; 
+	        dim.height = need.height;
+	    } else if (rules.height = "*" && dim.height < need.height) { // only grow taller
+	        dim.height = need.height * rules.width / need.width;
+	    } else if (rules.width == "*" && dim.width < need.width) { // only grow wider
+	        dim.width = need.width * rules.height / need.height;
+	    } else { // take fixes
+	        dim.width = rules.width;
+	        dim.height = rules.height;
+	    }
+	    
+	    // now apply the new dimension
+	    this.gc = null;
+
+	    var $new = $("<canvas height='"+dim.height+"' width='"+dim.width+"' />")
+	    $new.insertAfter(this.$cnv);
+	    this.$cnv.remove();
+	    this.$cnv = $new;
+    }
     
     
     // Internal GCLIB with standard operations/drawing assistance..
