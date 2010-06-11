@@ -4,10 +4,17 @@
     button {
         vertical-align: top;
     }
+    pre.ebnf {
+        background-color: rgba(220,220,240,0.9);
+    }
     </style>
+
     <script type="text/javascript" src="./js/jquery.min.js"></script>
+
     <script type="text/javascript" src="../../../target/js/ebnf-jq.js"></script>
     <script type="text/javascript" src="../../main/js/ebnfdiagram.js"></script>
+    <!--[if IE]><script type="text/javascript" src="./js/excanvas.js"></script><![endif]-->
+    
     <script type="text/javascript">
     $(document).ready(function(){
         var styles={
@@ -31,6 +38,9 @@
             },
             "DIAGRAM":         {
                 "line-stroke"      : "rgba( 200, 10, 10, 1)"
+            }, 
+    	    "CANVAS":          {
+                "height": "*"
             }
         }
 
@@ -39,6 +49,7 @@
     </script>
 </head>
 <body>
+<h2>EBNF Sample</h2>
 <pre class="ebnf" >
 
 "EBNF defined in itself" {
@@ -80,6 +91,10 @@
 
 </pre>
 <hr />
-Note. The <a href="test.html">interactive test page</a> has moved.
+<h2>Other samples</h2>
+<ul>
+  <li>A tribute <a href="json.html">to the json diagrams</a></li>
+  <li>An <a href="test.html">interactive test page</a>.</li>
+</ul>
 </body>
 </html>

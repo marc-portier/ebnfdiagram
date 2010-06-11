@@ -1,4 +1,4 @@
-;
+;var G_vmlCanvasManager = undefined;
 (function($){
 
     //introduce ebnfdia() on $
@@ -15,22 +15,48 @@
         }
     });
     
+    function makeCanvas(w, h, fn, hidden) {
+        fn = fn || function() {};
+        h = h ? Math.floor(h) : 100; 
+        w = w ? Math.floor(w) : 300;
+        
+        var $cnv;
+        
+        // check up on ie support via explorercanvas to initialize properly
+        if (G_vmlCanvasManager != undefined) {
+            // explorercanvas kinda expects elms to be built this way, not the jquery way.
+            var cnv = document.createElement('canvas');
+            cnv.setAttribute('height', h);
+            cnv.setAttribute('width', w);
+            cnv = G_vmlCanvasManager.initElement(cnv);
+            $cnv = $(cnv);
+        } else {
+            $cnv = $('<canvas height="'+h+'" width="'+w+'"></canvas>');
+        }
+        
+        fn($cnv);
+        
+        if (hidden) $cnv.hide();
+        
+        return $cnv;
+    }
+    
     function makeDiagram($elm, styles) {
         var ebnf = $elm.text();
         
         //TODO perform hight/width calculations
         var h = $elm.height();
         var w = $elm.width();
-        var cnv = '<canvas height="'+h+'" width="'+w+'"></canvas>';
-        var $cnv = $(cnv);
-        $cnv.insertAfter($elm).hide();
+
+        var $cnv = makeCanvas( $elm.width(), $elm.height(), function($cnv) {$cnv.insertAfter($elm)}, true);
+        
+        var dia = $cnv.ebnfcanvas(styles)[0];
         
         var showDiagram = function(dia) {
             $elm.hide("normal");
             dia.$cnv.show("normal");
         }
         
-        var dia = $cnv.ebnfcanvas(styles)[0];
         $.ebnfParse( ebnf, 
             function(syn){
                 dia.setSyntax(syn);
@@ -93,7 +119,7 @@
             "color"             : "rgba(  0,  0,  0, 0.7)", 
             "align"             : "left",
             "baseline"          : "bottom", 
-            "trail"             : 75,
+            "trail"             : 75
         },
         "TERM_SET":        {
         },
@@ -466,8 +492,8 @@
     //actual diagram code
     EbnfDiagram.prototype.init = function() {
 
-        this.height = this.$cnv.height();
-        this.width  = this.$cnv.width();
+        this.height = this.$cnv.attr('height');
+        this.width = this.$cnv.attr('width');
         
         // clear the canvas
         this.getGC().clearRect( 0, 0, this.width, this.height);
@@ -527,6 +553,9 @@
         try {
             gc.translate(x,y);
             node.handler.draw(node, this, gc);
+        } catch(e) {
+            debugger;
+            alert(e);
         } finally {
             gc.restore();
         }            
@@ -539,7 +568,6 @@
     EbnfDiagram.prototype.resize = function(need, rules) {
 	    if (!rules || (!rules.height && !rules.width))
 		    return; // no rules, no work
-	
 	    var dim={"height": this.height, "width": this.width};
 
 	    rules.height = rules.height || this.height; // nothing set means keep current
@@ -557,13 +585,19 @@
 	        dim.height = rules.height;
 	    }
 	    
-	    // now apply the new dimension
+	    // now apply the new dimension by creating a new canvas and dumoping the previous + context
 	    this.gc = null;
 
-	    var $new = $("<canvas height='"+dim.height+"' width='"+dim.width+"' />")
-	    $new.insertAfter(this.$cnv);
+        // explorercanvas kinda expects elms to be built this way, not the jquery way.
+        var cnv = document.createElement('canvas');
+        var $elm = this.$cnv;
+        var $cnv = makeCanvas( dim.width, dim.height, 
+            function($cnv){
+                $cnv.insertAfter($elm);
+            }, true);
+        
 	    this.$cnv.remove();
-	    this.$cnv = $new;
+	    this.$cnv = $cnv;
     }
     
     
