@@ -2,10 +2,7 @@
 
 
 # find out in which dir this was launched
-BASEDIR=$(dirname $0);
-cd ${BASEDIR};
-BASEDIR=$(pwd);
-cd - >> /dev/null;
+BASEDIR=$(cd $(dirname $0) && pwd);
 
 
 TGT="${BASEDIR}/target/js/ebnf-jq.js";
