@@ -456,9 +456,9 @@
                 dia.draw(c, 3*g, 0);
                 GCLIB.line(gc, node.width - 3*g, 2*g, node.width, 2*g);
                 
-                GCLIB.loopDown(gc, g, 3*g + c.width, 2*g, 2*g);
+                GCLIB.loopDown(gc, g, 3*g + c.width, 2*g, - 2*g + c.height);
                 GCLIB.line(gc, 3*g , c.height, node.width - 3*g, c.height);
-                GCLIB.loopUp(gc, g, 3*g, 2*g, 2*g);
+                GCLIB.loopUp(gc, g, 3*g, 2*g, - 2*g + c.height);
             }
         }, 
         "OPTIONAL":        {
