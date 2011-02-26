@@ -1,0 +1,31 @@
+<html>
+<head>
+    <style type="text/css">
+    button {
+        vertical-align: top;
+    }
+    </style>
+    <script type="text/javascript" src="./js/jquery.min.js"></script>
+    <script type="text/javascript" src="../../../target/js/ebnf-jq.js"></script>
+    <script type="text/javascript" src="../../main/js/ebnfdiagram.js"></script>
+    <script type="text/javascript">
+    $(document).ready(function(){
+        $("pre.ebnf").ebnfdiagram({'CANVAS':{'height':"*"}});
+    });
+    </script>
+</head>
+<body>
+<h2>simple syntax showing #8</h2>
+<pre class="ebnf" >
+
+"broken railroad" {
+ 
+
+    simple = a { b | c} .
+} "see trac issue #8."
+
+</pre>
+<hr />
+<p>Visit <a href="http://dev.outerthought.org/trac/outerthought_ebnfdiagram/ticket/8">Issue #8</a> for more info.</p>
+</body>
+</html>
