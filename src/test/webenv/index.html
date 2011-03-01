@@ -44,51 +44,15 @@
             }
         }
 
-        $("pre.ebnf").ebnfdiagram(styles);
+        $("pre.ebnf").load("../sample/ebnf.ebnf", function() {
+            $(this).ebnfdiagram(styles);
+        });
     });
     </script>
 </head>
 <body>
 <h2>EBNF Sample</h2>
 <pre class="ebnf" >
-
-"EBNF defined in itself" {
-
-
-	syntax     = [ title ] "{" { production } "}" [ comment ].
-
-
-	production = identifier "=" expression ( "." | ";" ) .
-
-
-	expression = term { "|" term } .
-
-
-	term       = factor { factor } .
-
-
-	factor     = identifier
-	           | literal
-	           | "[" expression "]"
-	           | "(" expression ")"
-	           | "{" expression "}" .
-
-
-	identifier = character { character } .
-
-
-	title      = literal .
-
-
-	comment    = literal .
-
-
-	literal    = "'" character { character } "'"
-	           | '"' character { character } '"' .
-
-
-} "EBNF is a cool syntax for describing syntaxes."
-
 </pre>
 <hr />
 <h2>Other samples</h2>

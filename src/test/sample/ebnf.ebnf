@@ -14,3 +14,4 @@
 	literal    = "'" character { character } "'"
 	           | '"' character { character } '"' .
 } "EBNF is a cool syntax for describing syntaxes."
+
