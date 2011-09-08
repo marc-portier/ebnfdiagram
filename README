@@ -5,9 +5,9 @@ jQuery plugin that plots syntax diagrams (aka railroad diagrams) out of a formal
 
 Getting it
 ----------
-You can checkout the source code at git://dev.outerthought.org/outerthought/ebnfdiagram.git
+You can checkout the source code at git://github.com/marc-portier/ebnfdiagram.git
 
-  $ git pull git://dev.outerthought.org/outerthought/ebnfdiagram.git
+  $ git pull git://github.com/marc-portier/ebnfdiagram.git
 
 
 Building
@@ -57,11 +57,10 @@ Also:
 
 Future Work
 -----------
-Is coordinated through git and track. 
-See: http://dev.outerthought.org/trac/outerthought_ebnfdiagram
+Is coordinated through github
+See: https://github.com/marc-portier/ebnfdiagram
 
 Next to the things you already thought of yourself, here is a short list of things to be added:
  * better build framework - and make it cross platform 
  * better jQuery usage: 
    * provide some automatic way to have pre/@class="ebnf" elements replaced with the diagram canvas
- * add support for the html5 impaired (ie) through explorercanvas (http://code.google.com/p/explorercanvas/)
