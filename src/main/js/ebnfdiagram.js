@@ -1,17 +1,9 @@
-;var G_vmlCanvasManager = undefined;
+;var G_vmlCanvasManager;
 (function($){
 
-    //introduce ebnfdia() on $
-    $.fn.extend({
-        "ebnfcanvas": function(styles) {
-            return this.map( function(){            
-                return new EbnfDiagram($(this), styles);
-            });
-        },
-        "ebnfdiagram": function(styles) {
-            return this.each( function(){            
-                makeDiagram($(this), styles);
-            });
+    $.extend({
+        "mergedClone": function(base, spec) {
+            return $.extend(true, $.extend({}, base), spec);
         }
     });
     
@@ -23,7 +15,7 @@
         var $cnv;
         
         // check up on ie support via explorercanvas to initialize properly
-        if (G_vmlCanvasManager != undefined) {
+        if (G_vmlCanvasManager !== undefined && G_vmlCanvasManager !== null) {
             // explorercanvas kinda expects elms to be built this way, not the jquery way.
             var cnv = document.createElement('canvas');
             cnv.setAttribute('height', h);
@@ -36,7 +28,7 @@
         
         fn($cnv);
         
-        if (hidden) $cnv.hide();
+        if (hidden) {  $cnv.hide(); }
         
         return $cnv;
     }
@@ -48,14 +40,14 @@
         var h = $elm.height();
         var w = $elm.width();
 
-        var $cnv = makeCanvas( $elm.width(), $elm.height(), function($cnv) {$cnv.insertAfter($elm)}, true);
+        var $cnv = makeCanvas( $elm.width(), $elm.height(), function($cnv) {$cnv.insertAfter($elm);}, true);
         
         var dia = $cnv.ebnfcanvas(styles)[0];
         
         var showDiagram = function(dia) {
             $elm.hide("normal");
             dia.$cnv.show("normal");
-        }
+        };
         
         $.ebnfParse( ebnf, 
             function(syn){
@@ -69,29 +61,9 @@
         );
     }
     
-    $.extend({
-        "mergedClone": function(base, spec) {
-            return $.extend(true, $.extend({}, base), spec);
-        }
-    });
-    
-    function EbnfDiagram($elm, styles) {
-        this.$cnv = $elm;
-
-        this.styles = $.mergedClone(STYLES, styles);
-        this.style  = this.styles["DIAGRAM"];
-        this.init();    
-    }
-
-    EbnfDiagram.prototype.getGC = function() {
-        if (! this.gc) {
-            this.gc = this.$cnv.get(0).getContext('2d');            
-        }
-        return this.gc;
-    }
 
     //default style
-    STYLES = {
+    var STYLES = {
         "SYNTAX":          {
             "margin"            : 10,
             "round"             : 10,
@@ -152,9 +124,162 @@
             "font"             : "12px Arial",
             "color"            : "rgba(  0,  0,  0, 0.7)"
         }
+    };
+
+
+    function EbnfDiagram($elm, styles) {
+        this.$cnv = $elm;
+
+        this.styles = $.mergedClone(STYLES, styles);
+        this.style  = this.styles.DIAGRAM;
+        this.init();    
     }
+
+    EbnfDiagram.prototype.getGC = function() {
+        if (! this.gc) {
+            this.gc = this.$cnv.get(0).getContext('2d');            
+        }
+        return this.gc;
+    };
+
     
-    NODEHANDLERS = {
+
+    // Internal GCLIB with standard operations/drawing assistance..
+    var GCLIB = {};
+    
+    /** Draws a centered (ie at 0,0) rounded rectangle with the specified width, height and percentage of round-ness on the corners */
+    GCLIB.roundedRect = function(gc, width, height, r, atx, aty) {
+        if (! (width && height)) {
+            return;
+        }
+
+        r = r || 0;
+        atx = atx || 0;
+        aty = aty || 0;
+
+        var w = width/2;
+        var h = height/2;
+
+        gc.beginPath();
+            if (r) {
+                gc.arc( atx -w + r, aty -h + r, r, -Math.PI  , -Math.PI/2, false);
+                gc.arc( atx +w - r, aty -h + r, r, -Math.PI/2, 0         , false);
+                gc.arc( atx +w - r, aty +h - r, r, 0         , Math.PI/2 , false);
+                gc.arc( atx -w + r, aty +h - r, r, Math.PI/2 , Math.PI   , false);
+            } else {
+                gc.moveTo( atx -w, aty -h);
+                gc.lineTo( atx +w, aty -h);
+                gc.lineTo( atx +w, aty +h);
+                gc.lineTo( atx -w, aty +h);
+            }
+        gc.closePath();
+        gc.fill();
+        gc.stroke();
+    };
+    
+    /** Draws text centered at 0,0 */
+    GCLIB.centeredText = function(gc, text, x, y) {
+        x = x || 0;
+        y = y || 0;
+        gc.fillText(text, x, y);
+    };
+    
+    /** Draws line from a to b */
+    GCLIB.line = function(gc, ax, ay, bx, by) {
+        gc.beginPath();
+        gc.moveTo( ax, ay);
+        gc.lineTo( bx, by);
+        gc.closePath();
+        gc.stroke();
+    };
+
+
+    /** Draws slide-in from a to b */
+    GCLIB.slideIn = function(gc, g, atx , aty, w, h){
+        w = Math.max(w , 2*g); // minimal width
+        h = h || 0;
+        if (h === 0) {
+            GCLIB.line(gc, atx, aty, atx+w, aty);
+            return;
+        }
+        gc.beginPath();
+        gc.arc( atx , aty + g, g, -Math.PI/2, 0,false);
+        gc.lineTo( atx + g, aty + h - g);
+        gc.arc( atx +2*g, aty + h - g, g, Math.PI, Math.PI/2,true);
+        gc.lineTo(atx + w, aty + h); 
+        gc.stroke();
+    };
+    
+    GCLIB.slideOut = function(gc, g, tox, toy, w, h){
+        w = Math.max(w , 2*g); // minimal width
+        h = h || 0;
+        if (h === 0) {
+            gc.beginPath();
+            gc.moveTo(tox -w, toy);
+            gc.lineTo( tox , toy);
+            gc.stroke();
+            return;
+        }
+        gc.beginPath();
+        gc.moveTo(tox -w, toy + h);
+        gc.lineTo(tox - 2*g, toy + h); 
+        gc.arc( tox - 2 * g , toy + h - g, g, Math.PI/2, 0, true);
+        gc.lineTo( tox -g , toy + g);
+        gc.arc( tox, toy + g, g, -Math.PI, -Math.PI/2, false);
+        gc.stroke();
+    };
+
+    GCLIB.loopDown = function(gc, g, atx, aty, h){
+        h = h || 0;
+        if (h === 0) { 
+            return;
+        }
+        gc.beginPath();
+        gc.arc( atx , aty + g, g, -Math.PI/2, 0,false);
+        gc.lineTo( atx + g, aty + h - g);
+        gc.arc( atx , aty + h - g, g, 0, Math.PI/2,false);
+        gc.stroke();
+    };
+
+    GCLIB.loopUp = function(gc, g, tox, toy, h){
+        h = h || 0;
+        if (h === 0) {
+            return;
+        }
+        gc.beginPath();
+        gc.arc( tox , toy + h - g, g, Math.PI/2, Math.PI, false);
+        gc.lineTo( tox - g, toy + g);
+        gc.arc( tox , toy + g, g, -Math.PI, -Math.PI/2,false);
+        gc.stroke();
+    };
+
+    var DEFAULT_FILL      = "rgb(255,255,255)";
+    var DEFAULT_STROKE    = "rgb(  0,  0,  0)";
+    var DEFAULT_WEIGHT    = 0;
+    var DEFAULT_FONT      = "8px Arial";
+    var DEFAULT_COLOR     = "rgb(  0,  0,  0)";
+    var DEFAULT_ALIGN     = "center";
+    var DEFAULT_BASELINE  = "middle";
+    
+    /** Sets drawstyles */
+    GCLIB.setDrawStyle = function(gc, style, pfx) {
+        pfx = pfx ? pfx + "-" : "";
+        gc.fillStyle   = style[pfx + "fill"]   || DEFAULT_FILL;
+        gc.strokeStyle = style[pfx + "stroke"] || DEFAULT_STROKE;
+        gc.lineWidth   = style[pfx + "weight"] || DEFAULT_WEIGHT;
+    };
+
+    /** Sets font-styles */
+    GCLIB.setTextStyle = function(gc, style, pfx) {
+        pfx = pfx ? pfx + "-" : "";
+        gc.font         = style[pfx + "font"]     || DEFAULT_FONT;
+        gc.fillStyle    = style[pfx + "color"]    || DEFAULT_COLOR;
+        gc.textAlign    = style[pfx + "align"]    || DEFAULT_ALIGN;
+        gc.textBaseline = style[pfx + "baseline"] || DEFAULT_BASELINE;
+    };
+    
+
+    var NODEHANDLERS = {
         "SYNTAX":          {
             "prepare": function(node, dia, gc) {
                 var s = node.style;
@@ -197,8 +322,8 @@
                 var sumH = 0;
                 var maxW = 0;
                 
-                var c = node.children;
-                for (var i = 0; i< c.length; i++){
+                var i = 0, c = node.children;
+                for (i = 0; i< c.length; i++){
                     var ci = c[i];
                     dia.prepare(ci);
                     sumH += ci.height;                
@@ -206,7 +331,7 @@
                 }
                 
                 // align all widths
-                for (var i = 0; i < c.length; i++){
+                for ( i = 0; i < c.length; i++){
                     c[i].width = maxW;
                 }
                 
@@ -218,9 +343,9 @@
                 
                 var offH = 0; 
 
-                var c = node.children;
+                var i = 0, c = node.children;
 
-                for (var i = 0; i < c.length; i++){
+                for (i = 0; i < c.length; i++){
                     var ci = c[i];
                     dia.draw(ci, 0, offH);
                     offH += ci.height;                
@@ -276,8 +401,8 @@
                 var sumH = 0;
                 var maxW = 0;
                 
-                var c = node.children;
-                for (var i = 0; i< c.length; i++){
+                var i = 0, c = node.children;
+                for (i = 0; i< c.length; i++){
                     var ci = c[i];
                     dia.prepare(ci);
                     sumH += ci.height;                
@@ -294,10 +419,10 @@
 
                 var offH = 0; 
 
-                var c = node.children;
+                var i = 0, c = node.children;
                 
                 GCLIB.setDrawStyle(gc, ds, "line");
-                for (var i = 0; i < c.length; i++){
+                for (i = 0; i < c.length; i++){
                     var ci = c[i];
                     GCLIB.slideIn (gc, g, 0 , 2*g, 3*g, offH);
 
@@ -318,8 +443,8 @@
                 var sumW = 0;
                 var maxH = 0;
                 
-                var c = node.children;
-                for (var i = 0; i< c.length; i++){
+                var i = 0, c = node.children;
+                for (i = 0; i< c.length; i++){
                     var ci = c[i];
                     dia.prepare(ci);
                     sumW += ci.width;                
@@ -338,8 +463,8 @@
                 
                 var offW = 0; 
 
-                var c = node.children;
-                for (var i = 0; i < c.length; i++){
+                var i = 0, c = node.children;
+                for (i = 0; i < c.length; i++){
                     var ci = c[i];
                     dia.draw(ci, offW, 0);
                     offW += ci.width;
@@ -487,7 +612,7 @@
                 GCLIB.slideOut(gc, g, node.width, 2*g, 3*g, 2*g);
             }
         }
-    }
+    };
 
     //actual diagram code
     EbnfDiagram.prototype.init = function() {
@@ -497,14 +622,14 @@
         
         // clear the canvas
         this.getGC().clearRect( 0, 0, this.width, this.height);
-    }
+    };
     
     EbnfDiagram.prototype.showErrors = function(err) {
-        var l = err.length;
-        for (var i = 0; i++; i<l) {
+        var i = 0, l = err.length;
+        for (i = 0; i++; i<l) {
             alert((i+1) + "/" + l + ":\n" + err[i]);
         }
-    }
+    };
     
     EbnfDiagram.prototype.setSyntax = function(syn) {
         this.prepare(syn, this.styles);
@@ -522,28 +647,32 @@
         } finally {
             gc.restore();
         }            
-    }
+    };
     
     // Preparation visitor, prepares the complete tree, 
     // assisted by call-backs from the parent-nodes down to their subnodes
     EbnfDiagram.prototype.prepare = function(node) {
         var type = node.nodetype;
-        if (node.handler)
+        if (node.handler) {
             throw "node is already prepared!" + node;
+        }
             
         node.handler = NODEHANDLERS[type];
-        if (!node.handler) throw "cannot handle node of type " + type;
+        if (!node.handler) { 
+            throw "cannot handle node of type " + type;
+        }
         
         node.style   = this.styles[type];
         
         node.handler.prepare(node, this, this.getGC());
-    }
+    };
     
     // Draw visitor, draws the specified node at the specified position
     // Requires nodes to be prepared.
     EbnfDiagram.prototype.draw = function(node, x, y) {
-        if (!node.handler) 
+        if (!node.handler)  {
             throw "Request to draw a node that is not prepared yet! nodetype=" + node.nodetype;
+        }
             
         var gc = this.getGC();
         x = x || 0;
@@ -554,31 +683,31 @@
             gc.translate(x,y);
             node.handler.draw(node, this, gc);
         } catch(e) {
-            debugger;
             alert(e);
         } finally {
             gc.restore();
         }            
-    }
+    };
     
 
     // Resizes the canvas to fit the needed space according to the rules
     // rules for width and height can be fixed values, or '*' 
     // * indicates that dimension can freely grow/adjust to needs.
     EbnfDiagram.prototype.resize = function(need, rules) {
-	    if (!rules || (!rules.height && !rules.width))
+	    if (!rules || (!rules.height && !rules.width)) {
 		    return; // no rules, no work
+		}
 	    var dim={"height": this.height, "width": this.width};
 
 	    rules.height = rules.height || this.height; // nothing set means keep current
 	    rules.width  = rules.width  || this.width; // nothing set means keep current
 	
-	    if (rules.width == "*" && rules.height == "*")	{ //set both
+	    if (rules.width === "*" && rules.height === "*")	{ //set both
 	        dim.width  = need.width; 
 	        dim.height = need.height;
-	    } else if (rules.height = "*" && dim.height < need.height) { // only grow taller
+	    } else if (rules.height === "*" && dim.height < need.height) { // only grow taller
 	        dim.height = need.height * rules.width / need.width;
-	    } else if (rules.width == "*" && dim.width < need.width) { // only grow wider
+	    } else if (rules.width === "*" && dim.width < need.width) { // only grow wider
 	        dim.width = need.width * rules.height / need.height;
 	    } else { // take fixes
 	        dim.width = rules.width;
@@ -598,137 +727,19 @@
         
 	    this.$cnv.remove();
 	    this.$cnv = $cnv;
-    }
+    };
     
-    
-    // Internal GCLIB with standard operations/drawing assistance..
-    var GCLIB = {};
-    
-    /** Draws a centered (ie at 0,0) rounded rectangle with the specified width, height and percentage of round-ness on the corners */
-    GCLIB.roundedRect = function(gc, width, height, r, atx, aty) {
-        if (! (width && height))
-            return;
-
-        r = r || 0;
-        atx = atx || 0;
-        aty = aty || 0;
-
-        var w = width/2;
-        var h = height/2;
-
-        gc.beginPath();
-            if (r) {
-                gc.arc( atx -w + r, aty -h + r, r, -Math.PI  , -Math.PI/2, false);
-                gc.arc( atx +w - r, aty -h + r, r, -Math.PI/2, 0         , false);
-                gc.arc( atx +w - r, aty +h - r, r, 0         , Math.PI/2 , false);
-                gc.arc( atx -w + r, aty +h - r, r, Math.PI/2 , Math.PI   , false);
-            } else {
-                gc.moveTo( atx -w, aty -h);
-                gc.lineTo( atx +w, aty -h);
-                gc.lineTo( atx +w, aty +h);
-                gc.lineTo( atx -w, aty +h);
-            }
-        gc.closePath();
-        gc.fill();
-        gc.stroke();
-    }
-    
-    /** Draws text centered at 0,0 */
-    GCLIB.centeredText = function(gc, text, x, y) {
-        x = x || 0;
-        y = y || 0;
-        gc.fillText(text, x, y);
-    }
-    
-    /** Draws line from a to b */
-    GCLIB.line = function(gc, ax, ay, bx, by) {
-        gc.beginPath();
-        gc.moveTo( ax, ay);
-        gc.lineTo( bx, by);
-        gc.closePath();
-        gc.stroke();
-    }
-
-
-    /** Draws slide-in from a to b */
-    GCLIB.slideIn = function(gc, g, atx , aty, w, h){
-        w = Math.max(w , 2*g); // minimal width
-        h = h || 0;
-        if (h==0) {
-            GCLIB.line(gc, atx, aty, atx+w, aty);
-            return;
+    //introduce ebnfdia() on $
+    $.fn.extend({
+        "ebnfcanvas": function(styles) {
+            return this.map( function(){            
+                return new EbnfDiagram($(this), styles);
+            });
+        },
+        "ebnfdiagram": function(styles) {
+            return this.each( function(){            
+                makeDiagram($(this), styles);
+            });
         }
-        gc.beginPath();
-        gc.arc( atx , aty + g, g, -Math.PI/2, 0,false);
-        gc.lineTo( atx + g, aty + h - g);
-        gc.arc( atx +2*g, aty + h - g, g, Math.PI, Math.PI/2,true);
-        gc.lineTo(atx + w, aty + h); 
-        gc.stroke();
-    }
-    
-    GCLIB.slideOut = function(gc, g, tox, toy, w, h){
-        w = Math.max(w , 2*g); // minimal width
-        h = h || 0;
-        if (h==0) {
-            gc.beginPath();
-            gc.moveTo(tox -w, toy);
-            gc.lineTo( tox , toy);
-            gc.stroke();
-            return;
-        }
-        gc.beginPath();
-        gc.moveTo(tox -w, toy + h);
-        gc.lineTo(tox - 2*g, toy + h); 
-        gc.arc( tox - 2 * g , toy + h - g, g, Math.PI/2, 0, true);
-        gc.lineTo( tox -g , toy + g);
-        gc.arc( tox, toy + g, g, -Math.PI, -Math.PI/2, false);
-        gc.stroke();
-    }
-
-    GCLIB.loopDown = function(gc, g, atx, aty, h){
-        h = h || 0;
-        if (h==0) 
-            return;
-        gc.beginPath();
-        gc.arc( atx , aty + g, g, -Math.PI/2, 0,false);
-        gc.lineTo( atx + g, aty + h - g);
-        gc.arc( atx , aty + h - g, g, 0, Math.PI/2,false);
-        gc.stroke();
-    }
-
-    GCLIB.loopUp = function(gc, g, tox, toy, h){
-        h = h || 0;
-        if (h==0) 
-            return;
-        gc.beginPath();
-        gc.arc( tox , toy + h - g, g, Math.PI/2, Math.PI, false);
-        gc.lineTo( tox - g, toy + g);
-        gc.arc( tox , toy + g, g, -Math.PI, -Math.PI/2,false);
-        gc.stroke();
-    }
-
-    var DEFAULT_FILL      = "rgb(255,255,255)";
-    var DEFAULT_STROKE    = "rgb(  0,  0,  0)";
-    var DEFAULT_WEIGHT    = 0;
-    var DEFAULT_FONT      = "8px Arial";
-    var DEFAULT_COLOR     = "rgb(  0,  0,  0)";
-    var DEFAULT_ALIGN     = "center";
-    var DEFAULT_BASELINE  = "middle";
-    
-    /** Sets drawstyles */
-    GCLIB.setDrawStyle = function(gc, style, pfx) {
-        pfx = pfx ? pfx + "-" : "";
-        gc.fillStyle   = style[pfx + "fill"]   || DEFAULT_FILL;
-        gc.strokeStyle = style[pfx + "stroke"] || DEFAULT_STROKE;
-        gc.lineWidth   = style[pfx + "weight"] || DEFAULT_WEIGHT;
-    }
-
-    /** Sets font-styles */
-    GCLIB.setTextStyle = function(gc, style, pfx) {
-        pfx = pfx ? pfx + "-" : "";
-        gc.font         = style[pfx + "font"]     || DEFAULT_FONT;
-        gc.fillStyle    = style[pfx + "color"]    || DEFAULT_COLOR;
-        gc.textAlign    = style[pfx + "align"]    || DEFAULT_ALIGN;
-        gc.textBaseline = style[pfx + "baseline"] || DEFAULT_BASELINE;
-    }
-})(jQuery);
+    });
+}(jQuery));
